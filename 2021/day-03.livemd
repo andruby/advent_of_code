@@ -1,0 +1,124 @@
+# Day 3
+
+## Setup
+
+```elixir
+Mix.install([
+  {:kino, github: "livebook-dev/kino"}
+])
+```
+
+```elixir
+test_input = Kino.Input.textarea("Please paste test:")
+```
+
+```elixir
+input = Kino.Input.textarea("Paste input:")
+```
+
+## Part 1
+
+```elixir
+defmodule Transposer do
+  def transpose(rows) do
+    rows
+    |> List.zip()
+    |> Enum.map(&Tuple.to_list/1)
+  end
+end
+
+transposed =
+  input
+  |> Kino.Input.read()
+  |> String.split("\n")
+  |> Enum.map(&String.graphemes/1)
+  |> Transposer.transpose()
+
+size =
+  transposed
+  |> List.first()
+  |> Enum.count()
+
+one_counts =
+  transposed
+  |> Enum.map(fn list -> Enum.count(list, fn a -> a == "1" end) end)
+
+gamma_bin =
+  one_counts
+  |> Enum.map(fn
+    x when x > size / 2 -> "1"
+    _ -> "0"
+  end)
+  |> Enum.join()
+
+epsilon_bin =
+  one_counts
+  |> Enum.map(fn
+    x when x < size / 2 -> "1"
+    _ -> "0"
+  end)
+  |> Enum.join()
+
+gamma =
+  gamma_bin
+  |> Integer.parse(2)
+  |> elem(0)
+
+epsilon =
+  epsilon_bin
+  |> Integer.parse(2)
+  |> elem(0)
+
+gamma * epsilon
+```
+
+## Testpad
+
+```elixir
+[[1, 0, 1, 1], [1, 0, 0, 1]]
+|> Enum.zip()
+|> Enum.map(fn {a, b} -> a + b end)
+|> IO.inspect()
+
+[[1, 0, 1, 1], [1, 0, 0, 1], [1, 0, 0, 1]]
+|> Enum.zip_reduce([], fn elements, acc -> acc ++ [Enum.sum(elements)] end)
+```
+
+## Part 1 - v2
+
+```elixir
+defmodule DD do
+  def zipcount(list) do
+    Enum.zip_reduce(list, [], fn elements, acc ->
+      acc ++ [Enum.sum(elements)]
+    end)
+  end
+end
+
+matrix =
+  test_input
+  |> Kino.Input.read()
+  |> String.split("\n")
+  |> Enum.map(&String.graphemes/1)
+  |> Enum.map(fn list -> Enum.map(list, &String.to_integer/1) end)
+
+size =
+  matrix
+  |> Enum.count()
+
+gamma =
+  matrix
+  |> DD.zipcount()
+  |> Enum.map(fn count -> if count > size / 2, do: "1", else: "0" end)
+  |> Enum.join()
+  |> String.to_integer(2)
+
+epsilon =
+  matrix
+  |> DD.zipcount()
+  |> Enum.map(fn count -> if count < size / 2, do: "1", else: "0" end)
+  |> Enum.join()
+  |> String.to_integer(2)
+
+gamma * epsilon
+```

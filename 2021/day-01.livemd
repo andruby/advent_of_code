@@ -1,0 +1,39 @@
+# Day 01
+
+## Section
+
+```elixir
+Mix.install([
+  {:kino, github: "livebook-dev/kino"}
+])
+```
+
+```elixir
+input = Kino.Input.textarea("Please paste input:")
+```
+
+## Part 1
+
+```elixir
+input
+|> Kino.Input.read()
+|> String.split("\n")
+|> Enum.map(&String.to_integer/1)
+|> Enum.reduce({0, nil}, fn
+  x, {count, last} when last < x -> {count + 1, x}
+  x, {count, _last} -> {count, x}
+end)
+```
+
+## Star 2
+
+```elixir
+input
+|> Kino.Input.read()
+|> String.split("\n")
+|> Enum.map(&String.to_integer/1)
+|> Enum.chunk_every(3, 1, :discard)
+|> Enum.map(&Enum.sum/1)
+|> Enum.chunk_every(2, 1, :discard)
+|> Enum.count(fn [left, right] -> left < right end)
+```
