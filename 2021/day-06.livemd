@@ -1,0 +1,99 @@
+# Day 6
+
+## Setup
+
+```elixir
+Mix.install([{:kino, "~> 0.4.1"}])
+```
+
+```elixir
+test_input = Kino.Input.textarea("Test input:")
+```
+
+```elixir
+input = Kino.Input.textarea("Input:")
+```
+
+```elixir
+initial_state =
+  input
+  |> Kino.Input.read()
+  |> String.split(",")
+  |> Enum.map(&String.to_integer/1)
+```
+
+## Part 1
+
+```elixir
+defmodule Simulator do
+  def next_day(state) do
+    state
+    |> Enum.map(fn
+      0 -> [6, 8]
+      x -> x - 1
+    end)
+    |> List.flatten()
+  end
+
+  def n_days(state, 0), do: state
+  def n_days(state, n), do: n_days(next_day(state), n - 1)
+end
+```
+
+```elixir
+Simulator.n_days(initial_state, 80)
+|> Enum.count()
+```
+
+## Part 2
+
+This naive code is too slow. Could caching work? This is fun.
+
+```elixir
+defmodule Simulator do
+  @caches for x <- 0..8, into: %{}, do: {x, Simulator.n_days([x], 128)}
+
+  def next_day(state), do: next_day(state, [])
+  def next_day([], next_state), do: next_state
+  def next_day([0 | tail], next_state), do: next_day(tail, [6, 8 | next_state])
+  def next_day([head | tail], next_state), do: next_day(tail, [head - 1 | next_state])
+
+  def n_days(state, 0), do: state
+  def n_days(state, n), do: n_days(next_day(state), n - 1)
+
+  def cached_days(_state, 128) do
+    # TODO
+    @caches[0]
+  end
+end
+
+caches = for x <- 0..8, into: %{}, do: {x, Simulator.n_days([x], 128)}
+
+[0, 2, 7, 5, 0, 2, 4, 0, 2, 7, 5, 0, 5, 3, 7, 5, 0, 2]
+|> Enum.frequencies()
+```
+
+## Part 2 w Frequencies
+
+Frequency domain makes things much faster!
+
+```elixir
+defmodule FreqSimulator do
+  def next_day(frequencies) do
+    freq_at_zero = Map.get(frequencies, 0, 0)
+
+    for({k, v} <- Map.delete(frequencies, 0), into: %{}, do: {k - 1, v})
+    |> Map.update(6, freq_at_zero, &(&1 + freq_at_zero))
+    |> Map.update(8, freq_at_zero, &(&1 + freq_at_zero))
+  end
+
+  def n_days(frequencies, 0), do: frequencies
+  def n_days(frequencies, n), do: n_days(next_day(frequencies), n - 1)
+end
+
+initial_state
+|> Enum.frequencies()
+|> FreqSimulator.n_days(256)
+|> Map.values()
+|> Enum.sum()
+```

@@ -1,0 +1,125 @@
+# day 04
+
+## Setup
+
+```elixir
+Mix.install([{:kino, ">= 0.4.0"}])
+```
+
+```elixir
+input = Kino.Input.textarea("Enter input:")
+```
+
+## Module
+
+```elixir
+defmodule Bingo do
+  def transpose(rows) do
+    rows
+    |> List.zip()
+    |> Enum.map(&Tuple.to_list/1)
+  end
+
+  def first_winner(draws, initial_boards) do
+    Enum.reduce_while(draws, initial_boards, fn draw, boards ->
+      boards
+      |> Enum.map(&remove_number(&1, draw))
+      |> check_winner
+      |> then(fn
+        {:yes, winner} -> {:halt, score(winner, draw)}
+        {:no, boards} -> {:cont, boards}
+      end)
+    end)
+  end
+
+  def last_winner(draws, initial_boards) do
+    Enum.reduce_while(draws, initial_boards, fn draw, boards ->
+      boards_next_step = Enum.map(boards, &remove_number(&1, draw))
+
+      boards_next_step
+      |> check_winner
+      |> then(fn
+        {:yes, winner} ->
+          boards_after_removal = remove_winners(boards_next_step)
+
+          if length(boards_after_removal) == 0 do
+            {:halt, score(winner, draw)}
+          else
+            {:cont, boards_after_removal}
+          end
+
+        {:no, boards} ->
+          {:cont, boards}
+      end)
+    end)
+  end
+
+  defp score(board, last_draw) do
+    board
+    |> List.flatten()
+    |> Enum.uniq()
+    |> Enum.sum()
+    |> Kernel.*(last_draw)
+  end
+
+  defp remove_number(lists, draw) do
+    lists
+    |> Enum.map(&List.delete(&1, draw))
+  end
+
+  defp remove_winners(boards) do
+    boards
+    |> Enum.reject(fn lists -> Enum.any?(lists, &(&1 == [])) end)
+  end
+
+  defp check_winner(boards) do
+    winner =
+      Enum.find(boards, fn lists ->
+        Enum.any?(lists, &(&1 == []))
+      end)
+
+    if winner, do: {:yes, winner}, else: {:no, boards}
+  end
+end
+```
+
+## Data Parsing
+
+```elixir
+[rdraws | [rboards]] =
+  input
+  |> Kino.Input.read()
+  |> String.split("\n", parts: 2)
+
+draws =
+  rdraws
+  |> String.split(",")
+  |> Enum.map(&String.to_integer/1)
+
+boards =
+  rboards
+  |> String.split("\n\n")
+  |> Enum.map(fn m -> String.split(m, "\n", trim: true) end)
+  |> Enum.map(fn m ->
+    Enum.map(m, fn b ->
+      String.split(b, ~r{\s+}, trim: true)
+      |> Enum.map(&String.to_integer/1)
+    end)
+  end)
+
+unrolled_boards =
+  boards
+  |> Enum.map(fn rows -> rows ++ Bingo.transpose(rows) end)
+```
+
+## Part 1
+
+```elixir
+Bingo.first_winner(draws, unrolled_boards)
+```
+
+## Part 2
+
+```elixir
+Bingo.last_winner(draws, unrolled_boards)
+```

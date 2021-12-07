@@ -1,0 +1,87 @@
+# Day 5
+
+## Setup
+
+```elixir
+Mix.install([{:kino, ">= 0.4.0"}])
+```
+
+```elixir
+test_input = Kino.Input.textarea("Test input:")
+```
+
+```elixir
+input = Kino.Input.textarea("Input:")
+```
+
+```elixir
+lines =
+  input
+  |> Kino.Input.read()
+  |> String.split("\n")
+  |> Enum.map(fn string ->
+    [x1, y1, x2, y2] =
+      Regex.run(~r/(\d+),(\d+) -> (\d+),(\d+)/, string, capture: :all_but_first)
+      |> Enum.map(&String.to_integer/1)
+
+    %{x1: x1, y1: y1, x2: x2, y2: y2}
+  end)
+```
+
+## Part 1
+
+```elixir
+defmodule Vents do
+  def overlap_count(lines) do
+    points =
+      lines
+      |> Enum.filter(fn line -> line.x1 == line.x2 || line.y1 == line.y2 end)
+      |> Enum.flat_map(fn line ->
+        x_points = Enum.to_list(line.x1..line.x2)
+        y_points = Enum.to_list(line.y1..line.y2)
+        combine(x_points, y_points)
+      end)
+
+    (points -- Enum.uniq(points))
+    |> Enum.uniq()
+    |> Enum.count()
+  end
+
+  defp combine(l1, l2) do
+    Enum.flat_map(l1, fn x -> Enum.map(l2, fn y -> {x, y} end) end)
+  end
+end
+
+Vents.overlap_count(lines)
+```
+
+## Part 2
+
+```elixir
+defmodule Vents do
+  def overlap_count(lines) do
+    points =
+      lines
+      |> Enum.flat_map(fn line ->
+        x_points = Enum.to_list(line.x1..line.x2)
+        y_points = Enum.to_list(line.y1..line.y2)
+
+        if length(x_points) == 1 || length(y_points) == 1 do
+          combine(x_points, y_points)
+        else
+          Enum.zip(x_points, y_points)
+        end
+      end)
+
+    (points -- Enum.uniq(points))
+    |> Enum.uniq()
+    |> Enum.count()
+  end
+
+  defp combine(l1, l2) do
+    Enum.flat_map(l1, fn x -> Enum.map(l2, fn y -> {x, y} end) end)
+  end
+end
+
+Vents.overlap_count(lines)
+```
