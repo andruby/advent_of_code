@@ -1,0 +1,56 @@
+# Day 7
+
+## Setup
+
+```elixir
+Mix.install([{:kino, "~> 0.4.1"}])
+```
+
+```elixir
+raw_input = Kino.Input.textarea("Input:")
+```
+
+```elixir
+input =
+  raw_input
+  |> Kino.Input.read()
+  |> String.split(",", trim: true)
+  |> Enum.map(&String.to_integer/1)
+```
+
+## Part 1
+
+That looks like the median. Yup, works. 🤔 Why?
+
+```elixir
+half_length = div(length(input), 2)
+
+median =
+  input
+  |> Enum.sort()
+  |> Enum.at(half_length)
+
+fuel_cost =
+  input
+  |> Enum.map(fn pos -> abs(pos - median) end)
+  |> Enum.sum()
+```
+
+## Part 2
+
+Will average work? Yes. Hmmm, I need to understand _why_ 😄
+
+```elixir
+avg =
+  input
+  |> Enum.sum()
+  |> div(length(input))
+
+fuel_cost =
+  input
+  |> Enum.map(fn pos ->
+    n = abs(pos - avg)
+    div(n * (n + 1), 2)
+  end)
+  |> Enum.sum()
+```
