@@ -84,7 +84,7 @@ defmodule FreqSimulator do
 
     for({k, v} <- Map.delete(frequencies, 0), into: %{}, do: {k - 1, v})
     |> Map.update(6, freq_at_zero, &(&1 + freq_at_zero))
-    |> Map.update(8, freq_at_zero, &(&1 + freq_at_zero))
+    |> Map.put(8, freq_at_zero)
   end
 
   def n_days(frequencies, 0), do: frequencies

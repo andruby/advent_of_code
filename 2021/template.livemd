@@ -1,0 +1,33 @@
+# Day X
+
+## Setup
+
+```elixir
+Mix.install([{:kino, "~> 0.4.1"}])
+```
+
+```elixir
+test_input = Kino.Input.textarea("Test input")
+```
+
+```elixir
+input = Kino.Input.textarea("Input")
+```
+
+## Parsing
+
+```elixir
+# todo
+```
+
+## Part 1
+
+```elixir
+
+```
+
+## Part 2
+
+```elixir
+
+```
